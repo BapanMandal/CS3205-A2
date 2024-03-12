@@ -113,6 +113,7 @@ pthread_t setup_incoming_message_listener(int sock)
         perror("[setup_incoming_message_listener] pthread_create\n");
         close(sock);
         exit(EXIT_FAILURE);
+        
     }
     return message_listener_id;
 }
