@@ -7,24 +7,24 @@
 #include <pthread.h>
 #include <sys/stat.h>
 #include <dirent.h>
-#include <signal.h>
 
-#define PORT 8800        // Server port
-#define PATH_MAX 4096    // The maximum file path length is 4096 characters for the ext4 filesystem.
+#define PORT 8888 // Server port
+#define PATH_MAX 4096 // The maximum file path length is 4096 characters for the ext4 filesystem.
 #define MAX_FILENAME 256 // The maximum filename length is 256 characters
-#define MAX_FILES 1000   // We assume that there are at most 1000 files in the directory
+#define MAX_FILES 1000 // We assume that there are at most 1000 files in the directory
 #define BUFFER_SIZE 1024 // Buffer size for sending TCP segments
 
-#define MAX_LISTEN_BACKLOGS 5                  // Maximum number of pending connections in the server socket's listen queue
-#define SONGS_FOLDER "/home/bapan/Music/Songs" // Folder containing the songs
+
+#define SONGS_FOLDER "/home/bapan/Music/Songs"
+
+
 
 // Comparison function for qsort
-int compare_filenames(const void *a, const void *b)
-{
+int compare_filenames(const void *a, const void *b) {
     return strcmp(*(const char **)a, *(const char **)b);
 }
 
-// Return list of names of regular files in a directory
+// List regular files in a directory
 char **list_files(const char *folder_path, int *cnt) // returns list of files and updates count of files
 {
     DIR *dir;
@@ -37,23 +37,20 @@ char **list_files(const char *folder_path, int *cnt) // returns list of files an
     // Open the directory
     dir = opendir(folder_path);
 
-    if (dir == NULL)
-    {
+    if (dir == NULL) {
         perror("Error opening directory");
         exit(EXIT_FAILURE);
     }
 
     // Store filenames
     int count = 0;
-    while ((entry = readdir(dir)) != NULL)
-    {
+    while ((entry = readdir(dir)) != NULL) {
         struct stat statbuf;
         char full_path[PATH_MAX];
 
         snprintf(full_path, sizeof(full_path), "%s/%s", folder_path, entry->d_name);
 
-        if (stat(full_path, &statbuf) == 0 && S_ISREG(statbuf.st_mode))
-        {
+        if (stat(full_path, &statbuf) == 0 && S_ISREG(statbuf.st_mode)) {
             filenames[count] = (char *)malloc(MAX_FILENAME * sizeof(char));
             strcpy(filenames[count], entry->d_name);
             count++;
@@ -78,24 +75,25 @@ void *handle_client(void *arg)
     // Extract the client socket file descriptor
     int client_socket = *((int *)arg);
 
+    int *count = (int *)malloc(sizeof(int *)); // Number of songs available in SONGS_FOLDER
+    char request[16]; // Buffer for receiving user's song selection
+
     // List the songs available
-    int *numSongs = (int *)malloc(sizeof(int *)); // Number of songs available in SONGS_FOLDER
-    char **songList = list_files(SONGS_FOLDER, numSongs);
+    char **songList = list_files(SONGS_FOLDER, count);
 
     // Send the number of songs to the client
-    char numSongs_str[BUFFER_SIZE];
-    sprintf(numSongs_str, "%d", *numSongs);
+    char numSongs_str[16];
+    sprintf(numSongs_str, "%d", *count);
     send(client_socket, numSongs_str, sizeof(numSongs_str), 0);
 
     // Send the song list to the client
-    for (int i = 0; i < *numSongs; i++)
+    for(int i = 0; i < *count; i++)
     {
-        send(client_socket, songList[i], sizeof(songList[i]), 0);
-        usleep(1000); // Sleep for 1ms to avoid sending multiple filenames in a single TCP segment
+        send(client_socket, songList[i], 256, 0);
     }
+    // send(client_socket, song_list_str, strlen(song_list_str), 0);
 
     // Receive user's song selection
-    char request[BUFFER_SIZE]; // Buffer for receiving user's song selection
     int bytes_received = recv(client_socket, request, sizeof(request), 0);
     if (bytes_received == -1)
     {
@@ -103,25 +101,27 @@ void *handle_client(void *arg)
         close(client_socket);
         pthread_exit(NULL);
     }
+
+    // Extract song number from request
     int song_number = atoi(request);
 
     // Validate song number (assuming 15 songs are available)
-    if (song_number < 1 || song_number > *numSongs)
+    if (song_number < 1 || song_number > *count)
     {
         // send(client_socket, "Invalid song number\n", strlen("Invalid song number\n"), 0);
         close(client_socket);
         pthread_exit(NULL);
     }
 
-    // Build song path based on song number
+    // Build song path based on song number (modify this logic as needed)
     char song_path[PATH_MAX];
-    sprintf(song_path, "%s/%s", SONGS_FOLDER, songList[song_number - 1]);
+    sprintf(song_path, "%s/%s", SONGS_FOLDER, songList[song_number-1]);
 
     // Open the song file
     FILE *song_file = fopen(song_path, "rb");
     if (!song_file)
     {
-        // send(client_socket, "Error opening song file\n", strlen("Error opening song file\n"), 0);
+        send(client_socket, "Error opening song file\n", strlen("Error opening song file\n"), 0);
         close(client_socket);
         pthread_exit(NULL);
     }
@@ -139,14 +139,16 @@ void *handle_client(void *arg)
     }
 
     // Clean up
-    for (int i = 0; i < *numSongs; i++)
-        free(songList[i]);
+    for(int i = 0; i < *count; i++) free(songList[i]);
     free(songList);
-    free(numSongs);
+    free(count);
     fclose(song_file);
     close(client_socket);
     pthread_exit(NULL);
+
 }
+
+
 
 int main()
 {
@@ -176,7 +178,7 @@ int main()
     }
 
     // Listen for incoming connections
-    if (listen(server_socket, MAX_LISTEN_BACKLOGS) == -1)
+    if (listen(server_socket, 5) == -1)
     {
         perror("Error listening for connections");
         close(server_socket);
@@ -184,6 +186,7 @@ int main()
     }
 
     printf("Server listening on port %d...\n", PORT);
+
 
     while (1)
     {
@@ -216,8 +219,7 @@ int main()
     }
 
     // Close the server socket
-    puts("Server is shutting down...");
     close(server_socket);
 
-    return EXIT_SUCCESS;
+    return 0;
 }
