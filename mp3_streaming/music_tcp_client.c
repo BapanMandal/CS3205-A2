@@ -8,13 +8,13 @@
 #define MAX_FILENAME 256 // The maximum filename length is 256 characters
 #define BUFFER_SIZE 1024 // Buffer size for reading user's selection
 
-#define SERVER_IP_ADDR "10.42.83.113" // Server IP address
-#define PORT 8888                     // Server port
+#define SERVER_IP_ADDR "10.42.83.24" // Server IP address
+#define PORT 8800                     // Server port
 
 // Wrapper function to send a request to the server
 void send_data(int client_socket, const char *request)
 {
-    send(client_socket, request, strlen(request), 0);
+    send(client_socket, request, sizeof(request), 0);
 }
 
 // Play the streamed mp3
@@ -87,6 +87,7 @@ int main()
     for (int i = 0; i < numSongs; i++)
     {
         char songName[MAX_FILENAME];
+        memset(songName, 0, sizeof(songName));
         recv(client_socket, songName, sizeof(songName), 0);
         printf("%d. %s\n", i + 1, songName);
     }
