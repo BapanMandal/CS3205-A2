@@ -9,7 +9,7 @@
 #include <dirent.h>
 #include <signal.h>
 
-#define PORT 8888        // Server port
+#define PORT 8800        // Server port
 #define PATH_MAX 4096    // The maximum file path length is 4096 characters for the ext4 filesystem.
 #define MAX_FILENAME 256 // The maximum filename length is 256 characters
 #define MAX_FILES 1000   // We assume that there are at most 1000 files in the directory
@@ -90,7 +90,8 @@ void *handle_client(void *arg)
     // Send the song list to the client
     for (int i = 0; i < *numSongs; i++)
     {
-        send(client_socket, songList[i], MAX_FILENAME, 0);
+        send(client_socket, songList[i], sizeof(songList[i]), 0);
+        usleep(1000); // Sleep for 1ms to avoid sending multiple filenames in a single TCP segment
     }
 
     // Receive user's song selection
