@@ -86,16 +86,16 @@ int main() {
     recv(client_socket, numSongs, sizeof(numSongs), 0);
     int songsCount = atoi(numSongs);
 
-    // Read the list of songs from the server
-    // char songList[8192];
-    // recv(client_socket, songList, sizeof(songList), 0);
-    printf("Available songs:\n");
-    for (int i = 0; i < songsCount; i++) {
-        char songName[256];
-        recv(client_socket, songName, sizeof(songName), 0);
-        // usleep(1000);
-        printf("%d. %s\n", i + 1, songName);
-    }
+    // // Read the list of songs from the server
+    // // char songList[8192];
+    // // recv(client_socket, songList, sizeof(songList), 0);
+    // printf("Available songs:\n");
+    // for (int i = 0; i < songsCount; i++) {
+    //     char songName[256];
+    //     recv(client_socket, songName, sizeof(songName), 0);
+    //     // usleep(1000);
+    //     printf("%d. %s\n", i + 1, songName);
+    // }
 
 
     // Read user's selection
