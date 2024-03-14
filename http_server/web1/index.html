@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="style.css">
+    <title>Login Page</title>
+</head>
+
+<body>
+    <div class="card">
+        <img align="center" src="images/name.jpg" alt="Logo">
+        <h1 align="center">Simple Text Analyzer</h1>
+	<form id="postForm" action="/" method="post">
+        	<h2 for="message">Enter some text in the box below</h2><br>
+        	<textarea id="message" name="message" rows="10" cols="58"></textarea><br><br>
+        	<button type="submit"><h2>Submit Text</h2></button>
+    	</form>
+    	<div id="response"></div>
+    	<div id="timeTaken"></div>
+    </div>
+    
+    <script>
+        document.getElementById("postForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            var formData = new FormData(this);
+            var startTime = performance.now(); // Capture start time
+            var endTime = 0;
+            var timeTaken = 0;
+            
+            var messageValue = formData.get("message");
+	    messageValue = "%**%" + messageValue.substring(0,1000) + "%**%";
+	    formData.set("message", messageValue);
+        
+            fetch("/", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => {
+                return response.text(); }    
+            )
+            .then(data => { 
+            	endTime = performance.now();
+                timeTaken = endTime - startTime;
+                document.getElementById("response").innerHTML = data;
+                document.getElementById("timeTaken").textContent = "Time taken by server to respond: " + timeTaken.toFixed(2) + " milliseconds";
+            })
+            .catch(error => {
+                console.error("Error:", error);
+            });
+        });
+    </script>
+
+</body>
+</html>
