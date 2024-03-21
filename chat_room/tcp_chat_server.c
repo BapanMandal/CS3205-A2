@@ -7,13 +7,14 @@
 #include <netinet/in.h>
 
 #define BUFFER_SIZE 1024
+#define USERNAME_SIZE 128
 #define PORT 8080
 
 // Data structures
 typedef struct
 {
     int socket;
-    char username[BUFFER_SIZE];
+    char username[USERNAME_SIZE];
 } Client;
 
 Client clients[BUFFER_SIZE];
@@ -82,7 +83,7 @@ int main()
 void *handle_client(void *arg)
 {
     int client_socket = *(int *)arg;
-    char username[BUFFER_SIZE];
+    char username[USERNAME_SIZE];
     bool username_set = false;
 
     // Send welcome message to client and prompt for username
@@ -142,12 +143,19 @@ void *handle_client(void *arg)
         if (strcmp(message, "\\list") == 0)
         {
             // Send list of users to client
+            memset(user_list, 0, BUFFER_SIZE);
+            strcpy(user_list, "Users currently online:\n");
+            for (int i = 0; i < num_clients; i++)
+            {
+                strcat(user_list, clients[i].username);
+                strcat(user_list, "\n");
+            }
             send(client_socket, user_list, strlen(user_list), 0);
         }
         else if (strcmp(message, "\\bye") == 0)
         {
             // Remove client from active list and notify others
-            pthread_mutex_lock(&client_mutex);
+            // pthread_mutex_lock(&client_mutex);
             for (int i = 0; i < num_clients; i++)
             {
                 if (clients[i].socket == client_socket)
@@ -159,9 +167,9 @@ void *handle_client(void *arg)
                     break;
                 }
             }
-            pthread_mutex_unlock(&client_mutex);
             close(client_socket);
             pthread_exit(NULL);
+            // pthread_mutex_unlock(&client_mutex);
         }
         else
         {
