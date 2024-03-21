@@ -6,5 +6,5 @@ Link to the problem statement: [Assignment 2](https://docs.google.com/document/d
 ## Part 1: MP3 Streaming over TCP
 Instruction to compile the `tcp_music_server.c` file:
 ```bash
-gcc -o music_server.out mp3_streaming/music_tcp_server.c -pthread -lasound -lmp3lame -largp
+gcc -o music_server.out mp3_streaming/music_tcp_server.c -pthread -lasound -lmp3lame
 ```
