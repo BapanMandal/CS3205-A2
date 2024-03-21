@@ -7,9 +7,9 @@
 #include <pthread.h>
 #include <string.h>
 
-#define PORT 8080
 #define BUFFER_SIZE 1024
-#define SERVER_IP "10.42.83.171"
+#define SERVER_IP "192.168.0.112"
+#define PORT 8080
 
 /**
  * CS3205 Assignment 2
@@ -78,7 +78,7 @@ void connect_to_server(int sock)
     // Convert IPv4 and IPv6 addresses from text to binary form
     if (inet_pton(AF_INET, SERVER_IP, &serv_addr.sin_addr) <= 0)
     {
-        perror("[connect_to_server] Invalid address/ Address not supported \n");
+        perror("[connect_to_server] Invalid address / Address not supported \n");
         exit(EXIT_FAILURE);
     }
 
@@ -173,7 +173,7 @@ void read_and_sanitize_user_input(char *buffer)
 {
     int input_length;
     do
-    {	
+    {
         input_length = -1;
         fgets(buffer, BUFFER_SIZE, stdin);
         remove_trailing_new_line(buffer);
