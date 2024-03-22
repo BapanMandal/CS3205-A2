@@ -8,8 +8,10 @@
 #include <time.h>
 
 #define BUFFER_SIZE 1024
-#define PORT 8080
-#define TIMEOUT_SECONDS 120
+
+int PORT;
+int MAX_CLIENTS;
+int TIMEOUT_SECONDS;
 
 // Data structures
 typedef struct
@@ -31,8 +33,17 @@ void send_to_all(char *message, int sender_socket);
 void remove_client(int index);
 void *timeout_checker(void *arg);
 
-int main()
+int main(int argc, char const *argv[])
 {
+    if(argc != 4){
+        printf("Usage: %s <port> <max_clients> <timeout_seconds>\n", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+    PORT = atoi(argv[1]);
+    MAX_CLIENTS = atoi(argv[2]);
+    TIMEOUT_SECONDS = atoi(argv[3]);
+
+
     int server_fd, new_socket;
     struct sockaddr_in address;
     int addrlen = sizeof(address);
@@ -170,7 +181,7 @@ void *handle_client(void *arg)
         else if (strcmp(message, "\\bye") == 0)
         {
             // Remove client from active list and notify others
-            pthread_mutex_lock(&client_mutex);
+            // pthread_mutex_lock(&client_mutex);
             for (int i = 0; i < num_clients; i++)
             {
                 if (clients[i].socket == client_socket)
@@ -182,7 +193,7 @@ void *handle_client(void *arg)
                     break;
                 }
             }
-            pthread_mutex_unlock(&client_mutex);
+            // pthread_mutex_unlock(&client_mutex);
             close(client_socket);
             pthread_exit(NULL);
         }
